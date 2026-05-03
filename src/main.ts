@@ -1,50 +1,40 @@
+// import { NestFactory } from '@nestjs/core';
+// import { ValidationPipe } from '@nestjs/common';
+// import { AppModule } from './app.module';
+
+// async function bootstrap() {
+//   const app = await NestFactory.create(AppModule);
+//   app.enableCors();
+//   app.useGlobalPipes(new ValidationPipe());
+//   await app.listen(process.env.PORT ?? 5000);
+// }
+// bootstrap();
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express, { Request, Response } from 'express';
+import { ValidationPipe } from '@nestjs/common';
+import express from 'express';
 
-const expressApp = express();
-let app: any;
+const server = express();
 
-async function bootstrap() {
-  if (!app) {
-    app = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(expressApp),
-    );
-
-    app.enableCors({
-      origin: '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    });
-
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
-
-    await app.init();
-  }
+export const createNestServer = async (expressInstance: express.Express) => {
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(expressInstance),
+  );
+  app.enableCors();
+  app.useGlobalPipes(new ValidationPipe());
+  await app.init();
   return app;
-}
+};
 
-// Local development
-if (process.env.NODE_ENV !== 'production') {
-  bootstrap().then(async () => {
-    await app.listen(process.env.PORT ?? 3000);
-    console.log(
-      `Running on http://localhost:${process.env.PORT ?? 3000}`,
-    );
-  });
-}
+let cachedApp: any;
 
-// Vercel serverless handler
-export default async (req: Request, res: Response) => {
-  await bootstrap();
-  expressApp(req, res);
+export default async (req: any, res: any) => {
+  if (!cachedApp) {
+    await createNestServer(server);
+    cachedApp = server;
+  }
+  server(req, res);
 };
