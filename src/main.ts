@@ -10,34 +10,29 @@
 // }
 // bootstrap();
 
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
-import express from 'express';
-import { Express } from 'express';
-import { INestApplication } from '@nestjs/common';
+import { ValidationPipe, INestApplication } from '@nestjs/common';
+import { Request, Response } from 'express';
 
-const expressApp: Express = express();
 let nestApp: INestApplication | null = null;
 
-async function bootstrap(): Promise<Express> {
+async function bootstrap(): Promise<INestApplication> {
   if (!nestApp) {
-    nestApp = await NestFactory.create(
-      AppModule,
-      new ExpressAdapter(expressApp),
-      { logger: ['error', 'warn'] },
-    );
+    nestApp = await NestFactory.create(AppModule, {
+      logger: ['error', 'warn'],
+    });
     nestApp.enableCors();
     nestApp.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true }),
     );
     await nestApp.init();
   }
-  return expressApp;
+  return nestApp;
 }
 
-export default async (req: any, res: any) => {
+export default async (req: Request, res: Response): Promise<void> => {
   const app = await bootstrap();
-  app(req, res);
+  app.getHttpAdapter().getInstance()(req, res);
 };
