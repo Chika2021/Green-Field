@@ -9,7 +9,7 @@
     "vercel-build": "nest build",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "node dist/main",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
@@ -30,7 +30,8 @@
     "class-validator": "^0.15.1",
     "nodemailer": "^8.0.7",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "express": "^4.21.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -57,7 +58,8 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vercel": "^53.1.0"
   },
   "jest": {
     "moduleFileExtensions": [
