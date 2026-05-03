@@ -15,26 +15,29 @@ import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { ValidationPipe } from '@nestjs/common';
 import express from 'express';
+import { Express } from 'express';
+import { INestApplication } from '@nestjs/common';
 
-const server = express();
+const expressApp: Express = express();
+let nestApp: INestApplication | null = null;
 
-export const createNestServer = async (expressInstance: express.Express) => {
-  const app = await NestFactory.create(
-    AppModule,
-    new ExpressAdapter(expressInstance),
-  );
-  app.enableCors();
-  app.useGlobalPipes(new ValidationPipe());
-  await app.init();
-  return app;
-};
-
-let cachedApp: any;
+async function bootstrap(): Promise<Express> {
+  if (!nestApp) {
+    nestApp = await NestFactory.create(
+      AppModule,
+      new ExpressAdapter(expressApp),
+      { logger: ['error', 'warn'] },
+    );
+    nestApp.enableCors();
+    nestApp.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
+    await nestApp.init();
+  }
+  return expressApp;
+}
 
 export default async (req: any, res: any) => {
-  if (!cachedApp) {
-    await createNestServer(server);
-    cachedApp = server;
-  }
-  server(req, res);
+  const app = await bootstrap();
+  app(req, res);
 };
